@@ -14,6 +14,7 @@ async function getAdminEmail(): Promise<string | null> {
 const navItems = [
   { href: "/", label: "대시보드" },
   { href: "/ocr", label: "OCR 검증" },
+  { href: "/corrections", label: "유의어 사전" },
   { href: "/audit", label: "감사 로그" },
   { href: "/users", label: "사용자" },
 ];
