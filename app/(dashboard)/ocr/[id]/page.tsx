@@ -4,6 +4,7 @@ import { generateReadSasUrl } from "@/lib/azure";
 import { verifyAction } from "./actions";
 import {
   asObject,
+  diffParsedCorrected,
   formatConfidence,
   formatDateTime,
   formatKrw,
@@ -26,6 +27,8 @@ interface CaptureDetail {
   raw_text: string | null;
   raw_blocks: unknown;
   parsed: unknown;
+  corrected: unknown;
+  corrected_at: string | null;
   ocr_confidence: number | null;
   verified_status: string;
   verified_at: string | null;
@@ -70,7 +73,7 @@ export default async function OcrDetailPage({
     const { data: cap, error: capErr } = await supabase
       .from("ocr_captures")
       .select(
-        "id, receipt_id, event_id, source, engine, raw_text, raw_blocks, parsed, ocr_confidence, verified_status, verified_at, verified_note, created_at",
+        "id, receipt_id, event_id, source, engine, raw_text, raw_blocks, parsed, corrected, corrected_at, ocr_confidence, verified_status, verified_at, verified_note, created_at",
       )
       .eq("id", id)
       .maybeSingle();
@@ -136,6 +139,10 @@ export default async function OcrDetailPage({
   const parsedItemName = pickString(parsed, "itemName");
 
   const fieldConf = (key: string) => formatConfidence(pickNumber(conf, key));
+
+  // 사용자 최종 수정값(피드백) — corrected 가 없으면 null.
+  const diff = diffParsedCorrected(capture.parsed, capture.corrected);
+  const changedCount = diff?.filter((d) => d.changed).length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -213,6 +220,58 @@ export default async function OcrDetailPage({
               value={`${parsedItemName ?? "-"}  (${fieldConf("itemName")})`}
             />
           </div>
+
+          {/* 사용자 최종 수정값(피드백): parsed(수정 전) → corrected(수정 후) */}
+          {diff ? (
+            <div className="rounded-xl bg-white p-4 ring-1 ring-indigo-200">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-indigo-700">
+                  사용자 수정값 (피드백)
+                </h3>
+                <span className="text-xs text-gray-400">
+                  {changedCount > 0 ? `${changedCount}개 변경` : "변경 없음"} ·{" "}
+                  {formatDateTime(capture.corrected_at)}
+                </span>
+              </div>
+              <div className="space-y-1">
+                {diff.map((d) => (
+                  <div
+                    key={d.key}
+                    className={
+                      "flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 " +
+                      (d.changed ? "bg-amber-50" : "")
+                    }
+                  >
+                    <span className="text-sm text-gray-500">{d.label}</span>
+                    <span className="flex items-center gap-2 text-right text-sm">
+                      <span
+                        className={
+                          d.changed
+                            ? "text-gray-400 line-through"
+                            : "text-gray-400"
+                        }
+                      >
+                        {d.before}
+                      </span>
+                      <span className="text-gray-300">→</span>
+                      <span
+                        className={
+                          "font-medium " +
+                          (d.changed ? "text-amber-700" : "text-gray-900")
+                        }
+                      >
+                        {d.after}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-gray-400">
+                사용자가 앱에서 최종 저장한 값입니다. 변경된 필드는 파서·유의어
+                사전 개선의 근거로 활용하세요.
+              </p>
+            </div>
+          ) : null}
 
           <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
             <h3 className="mb-2 text-sm font-semibold text-gray-700">메타</h3>

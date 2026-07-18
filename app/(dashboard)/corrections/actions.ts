@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { isMatchType, type MatchType } from "@/lib/ocr";
 
 // OCR 유의어(오독 보정) 사전 CRUD. 모두 service_role 클라이언트로 RLS 를 우회한다.
 // wrong_text 는 lower(btrim(...)) 유니크 인덱스가 걸려 있어, 정규화 형태가 겹치면
@@ -10,11 +11,18 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const DUP_CODE = "23505";
 
+// match_type 폼값을 검증한다. 미지정/이상값은 기본 'exact'.
+function readMatchType(formData: FormData): MatchType {
+  const v = String(formData.get("match_type") ?? "").trim();
+  return isMatchType(v) ? v : "exact";
+}
+
 // 오독 원문 신규 등록.
 export async function createCorrection(formData: FormData): Promise<void> {
   const wrong = String(formData.get("wrong_text") ?? "").trim();
   const correct = String(formData.get("correct_text") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
+  const matchType = readMatchType(formData);
 
   if (!wrong || !correct) {
     redirect("/corrections?error=empty");
@@ -25,6 +33,7 @@ export async function createCorrection(formData: FormData): Promise<void> {
     wrong_text: wrong,
     correct_text: correct,
     note: note || null,
+    match_type: matchType,
   });
 
   if (error) {
@@ -36,12 +45,13 @@ export async function createCorrection(formData: FormData): Promise<void> {
   redirect("/corrections");
 }
 
-// 오독 원문/보정값/메모 수정.
+// 오독 원문/보정값/메모/일치유형 수정.
 export async function updateCorrection(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   const wrong = String(formData.get("wrong_text") ?? "").trim();
   const correct = String(formData.get("correct_text") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
+  const matchType = readMatchType(formData);
 
   if (!id) return;
   if (!wrong || !correct) {
@@ -55,6 +65,7 @@ export async function updateCorrection(formData: FormData): Promise<void> {
       wrong_text: wrong,
       correct_text: correct,
       note: note || null,
+      match_type: matchType,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

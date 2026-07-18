@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   asObject,
+  diffParsedCorrected,
   formatConfidence,
   formatKrw,
   formatDateTime,
@@ -10,7 +11,6 @@ import {
   pickString,
   STATUS_BADGE,
   STATUS_LABEL,
-  VERIFIED_STATUSES,
   type VerifiedStatus,
 } from "@/lib/ocr";
 
@@ -25,6 +25,7 @@ interface CaptureRow {
   engine: string | null;
   ocr_confidence: number | null;
   parsed: unknown;
+  corrected: unknown;
   verified_status: string;
 }
 
@@ -51,7 +52,7 @@ export default async function OcrListPage({
     let query = supabase
       .from("ocr_captures")
       .select(
-        "id, created_at, source, engine, ocr_confidence, parsed, verified_status",
+        "id, created_at, source, engine, ocr_confidence, parsed, corrected, verified_status",
       )
       // 낮은 신뢰도 우선 → 검수 우선순위. null 신뢰도는 먼저 보이게.
       .order("ocr_confidence", { ascending: true, nullsFirst: true })
@@ -137,6 +138,9 @@ export default async function OcrListPage({
                   )
                     ? row.verified_status
                     : "unreviewed";
+                  // 사용자 피드백(corrected) 유무 및 실제 변경 여부.
+                  const diff = diffParsedCorrected(row.parsed, row.corrected);
+                  const feedbackChanged = diff?.some((d) => d.changed) ?? false;
                   return (
                     <tr
                       key={row.id}
@@ -165,14 +169,24 @@ export default async function OcrListPage({
                       </td>
                       <td className="px-4 py-3 text-gray-700">{date}</td>
                       <td className="px-4 py-3">
-                        <span
-                          className={
-                            "rounded-full px-2 py-0.5 text-xs font-medium " +
-                            STATUS_BADGE[vs]
-                          }
-                        >
-                          {STATUS_LABEL[vs]}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={
+                              "rounded-full px-2 py-0.5 text-xs font-medium " +
+                              STATUS_BADGE[vs]
+                            }
+                          >
+                            {STATUS_LABEL[vs]}
+                          </span>
+                          {feedbackChanged ? (
+                            <span
+                              className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+                              title="사용자가 앱에서 값을 수정했습니다"
+                            >
+                              수정됨
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   );
