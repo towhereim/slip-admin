@@ -114,7 +114,7 @@ export default async function OcrListPage({
                 <th className="px-4 py-3 font-medium">소스</th>
                 <th className="px-4 py-3 font-medium">엔진</th>
                 <th className="px-4 py-3 text-right font-medium">신뢰도</th>
-                <th className="px-4 py-3 font-medium">가맹점</th>
+                <th className="px-4 py-3 font-medium">상호</th>
                 <th className="px-4 py-3 text-right font-medium">금액</th>
                 <th className="px-4 py-3 font-medium">날짜</th>
                 <th className="px-4 py-3 font-medium">상태</th>

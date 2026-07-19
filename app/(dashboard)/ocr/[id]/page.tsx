@@ -189,7 +189,7 @@ export default async function OcrDetailPage({
               <h3 className="mb-2 text-sm font-semibold text-gray-700">
                 영수증(receipts) 값
               </h3>
-              <Field label="가맹점" value={receipt.merchant ?? "-"} />
+              <Field label="상호" value={receipt.merchant ?? "-"} />
               <Field label="금액" value={formatKrw(receipt.amount)} />
               <Field label="날짜" value={receipt.receipt_date ?? "-"} />
               <Field label="상태" value={receipt.status ?? "-"} />
@@ -204,7 +204,7 @@ export default async function OcrDetailPage({
           <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
             <h3 className="mb-2 text-sm font-semibold text-gray-700">파싱 결과</h3>
             <Field
-              label="가맹점"
+              label="상호"
               value={`${parsedMerchant ?? "-"}  (${fieldConf("merchant")})`}
             />
             <Field

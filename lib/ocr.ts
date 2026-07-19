@@ -112,7 +112,7 @@ export function diffParsedCorrected(
   const krw = (o: Json, key: string) => formatKrw(pickNumber(o, key));
 
   const specs: { key: OcrDiffKey; label: string; fmt: (o: Json) => string }[] = [
-    { key: "merchant", label: "가맹점", fmt: (o) => text(o, "merchant") },
+    { key: "merchant", label: "상호", fmt: (o) => text(o, "merchant") },
     { key: "amount", label: "금액", fmt: (o) => krw(o, "amount") },
     { key: "date", label: "날짜", fmt: (o) => text(o, "date") },
     { key: "itemName", label: "품목", fmt: (o) => text(o, "itemName") },
