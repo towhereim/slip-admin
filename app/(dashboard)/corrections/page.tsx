@@ -119,7 +119,7 @@ export default async function CorrectionsPage({
             <span className="text-gray-500">일치 유형</span>
             <select
               name="match_type"
-              defaultValue="exact"
+              defaultValue="substring"
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand focus:ring-1 focus:ring-brand"
             >
               <option value="exact">전체 일치</option>
